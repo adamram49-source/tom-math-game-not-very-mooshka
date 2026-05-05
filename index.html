@@ -43,37 +43,19 @@
             margin-top: 1rem;
         }
 
-        /* --- אנימציות מעבר עוצמתיות --- */
+        /* --- אנימציות מעבר --- */
         @keyframes mega-shake {
             0% { transform: translate(0,0) rotate(0); }
             10% { transform: translate(-20px, -20px) rotate(-5deg); }
             20% { transform: translate(20px, 20px) rotate(5deg); }
             30% { transform: translate(-30px, 10px) rotate(-10deg); }
             40% { transform: translate(30px, -10px) rotate(10deg); }
-            50% { transform: translate(-20px, 20px) rotate(-5deg); background: white; }
-            60% { transform: translate(20px, -20px) rotate(5deg); }
-            70% { transform: translate(-30px, -10px) rotate(-10deg); background: white; }
-            80% { transform: translate(30px, 10px) rotate(10deg); }
-            90% { transform: translate(-10px, -10px) rotate(-2deg); }
             100% { transform: translate(0,0) rotate(0); }
         }
         .mega-shake-active { animation: mega-shake 0.1s infinite; }
 
-        #flash-overlay {
-            position: fixed;
-            inset: 0;
-            background: white;
-            z-index: 100;
-            display: none;
-            pointer-events: none;
-        }
-        #black-screen {
-            position: fixed;
-            inset: 0;
-            background: black;
-            z-index: 101;
-            display: none;
-        }
+        #flash-overlay { position: fixed; inset: 0; background: white; z-index: 100; display: none; pointer-events: none; }
+        #black-screen { position: fixed; inset: 0; background: black; z-index: 101; display: none; }
 
         .magic-mode-bg { animation: rainbowBg 10s infinite linear !important; }
         @keyframes rainbowBg {
@@ -83,7 +65,6 @@
             100% { background: #ff9a9e; }
         }
 
-        /* --- משוב מטבעות --- */
         .coin-feedback {
             position: absolute;
             font-weight: 900;
@@ -98,6 +79,24 @@
             100% { transform: translateY(-100px); opacity: 0; }
         }
 
+        /* --- מודאל הודעות מתכון --- */
+        #recipe-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 2rem;
+            box-shadow: 0 0 0 100vmax rgba(0,0,0,0.7);
+            z-index: 200;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            display: none;
+            border: 4px solid #8b5cf6;
+        }
+
         progress { width: 100%; height: 8px; border-radius: 10px; }
         progress::-webkit-progress-value { background: #06b6d4; border-radius: 10px; }
     </style>
@@ -106,6 +105,13 @@
 
     <div id="flash-overlay"></div>
     <div id="black-screen"></div>
+
+    <!-- מודאל הודעת מתכון -->
+    <div id="recipe-popup">
+        <div id="recipe-msg" class="text-xl font-bold text-gray-800 leading-relaxed"></div>
+        <div class="mt-4 text-sm text-red-500 font-bold">הודעה זו תיעלם בעוד: <span id="timer-sec">60</span> שניות</div>
+        <button onclick="closeRecipe()" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-full font-bold">הבנתי!</button>
+    </div>
 
     <div id="game-ui" class="w-full max-w-4xl px-4 flex flex-col items-center">
         <!-- Stats -->
@@ -140,23 +146,33 @@
 
     <!-- Shop Overlay -->
     <div id="shop-overlay" class="fixed inset-0 bg-black/60 hidden z-50 p-4 items-center justify-center">
-        <div class="bg-white rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col">
+        <div class="bg-white rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col">
             <div class="p-5 border-b flex justify-between items-center">
                 <h2 class="font-black text-xl">חנות החיות 🐾</h2>
                 <button onclick="toggleShop()" class="text-2xl font-bold">&times;</button>
             </div>
-            <div id="shop-list" class="p-5 overflow-y-auto space-y-4"></div>
+            <div class="p-5 overflow-y-auto">
+                <div class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-4 mb-6 text-sm text-purple-900 leading-relaxed font-bold">
+                    תום, ברוכים הבאים לחנות החיות, יש כאן משהו קסום, לפני כל חייה שתתקנה רצוי שתצתייד בדף ועפרון מפני שכל חיה שתקנה תתן לך חלק אחד מתוך המתכון הסודי של החיות, אבל!!!<br><br>
+                    רצוי שתעתיק כל חלק מהמתכון שתקבל מהחיות כמה שיותר מהר מפני שכל חלק שתקבל יופיע על המסך למשך דקה אחת בלבד!<br><br>
+                    לאחר שתקנה את כל החיות ותשיג את כל מתעון החיות המלא עליך לבצע את כל הפעולות של המתכון לפי הסדר שהן ממוספרות.<br><br>
+                    לאחר שתבצע את כל השלב מתכון החיות יפעל ומשהו קסום יקרה 🤫!!!.<br><br>
+                    הפעל את מתכון החיות וגלה מהו הדבר הקסום, בהצלחה!!!!!!!!!!
+                </div>
+                <div id="shop-list" class="space-y-4"></div>
+            </div>
         </div>
     </div>
 
     <script>
         const petsData = [
             { id: 'chick', name: 'אפרוח', emoji: '🐥', price: 0, power: 1, diamondCost: 1 },
-            { id: 'cat', name: 'חתלתול', emoji: '🐱', price: 50, power: 3, diamondCost: 2 },
-            { id: 'dog', name: 'כלבלב', emoji: '🐶', price: 150, power: 8, diamondCost: 3 },
-            { id: 'bunny', name: 'ארנב', emoji: '🐰', price: 400, power: 15, diamondCost: 5 },
-            { id: 'unicorn', name: 'חד קרן', emoji: '🦄', price: 1000, power: 40, diamondCost: 8 },
-            { id: 'dragon', name: 'דרקון', emoji: '🐲', price: 3000, power: 100, diamondCost: 15 }
+            { id: 'cat', name: 'חתלתול', emoji: '🐱', price: 50, power: 3, diamondCost: 2, msg: '"מיאו, אני חתלתול ואני אומר לך שהחלק הראשון במתכון החיות הוא:\n\n1. דבר ראשון תגיע לרצף של 10 תשובות נכונות\n\nבהצלחה!!!"' },
+            { id: 'dog', name: 'כלבלב', emoji: '🐶', price: 150, power: 8, diamondCost: 3, msg: '"היי, אני הכלבלב ואני חייב להגיד לך את החלק הכי מעניין במתכון החיות:\n\n2. דבר שני עליך לשים את האפרוח\n\nתהנה!!!"' },
+            { id: 'bunny', name: 'ארנב', emoji: '🐰', price: 400, power: 15, diamondCost: 5, msg: '"היי אני ראביט הארנב, ואני רוצה לספר לך את החלק השלישי במתכון החיות כי אני הכי אוהב אותו:\n\n3. דבר שלישי עליך לשים את החד קרן\n\nתהנה תום יא גזור!"' },
+            { id: 'panda', name: 'פנדה', emoji: '🐼', price: 800, power: 25, diamondCost: 6, msg: '"היי תום אני פנדה ואני רוצה שתקשיב לי טוב כי החלק הזה מסוכן:\n\n4. דבר רביעי החלק הזה הוא סודי, עליך לדלג על שלב 5\n\nבהצלחה ותיזהר!!!"' },
+            { id: 'unicorn', name: 'חד קרן', emoji: '🦄', price: 1500, power: 40, diamondCost: 8, msg: '"היי תום אני חד קרן וכמו שאתה יכול לנחש יש לי קרן אחת, זאת ההודעה שלי:\n\n5. דבר חמישי עליך לשים את הדרקון\n\nבהצלחה ותיזהר לא להישרף מהדרקון!"' },
+            { id: 'dragon', name: 'דרקון', emoji: '🐲', price: 3000, power: 100, diamondCost: 15, msg: '"היי תום אני שמח לבסר לך את החלק האחרון במתכון החיות:\n\n6. דבר שישי ואחרון עליך לענות נכון על השאלה שמופיעה כרגע\n\nבהצלחה תום אני מאמין בך!!!"' }
         ];
 
         let state = {
@@ -167,9 +183,10 @@
 
         let currentAns = 0;
         let isProcessing = false;
+        let recipeTimer = null;
 
         function init() {
-            const saved = localStorage.getItem('math_quest_pro');
+            const saved = localStorage.getItem('math_quest_pro_v2');
             if (saved) {
                 state = JSON.parse(saved);
                 if (state.isMagic) enableMagicUI();
@@ -214,8 +231,6 @@
         function check(val, btn) {
             if (isProcessing) return;
             isProcessing = true;
-            
-            // נעילת כל הכפתורים
             document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
 
             if (val === currentAns) {
@@ -223,7 +238,6 @@
                 btn.classList.replace('bg-indigo-50', 'bg-green-400');
                 btn.classList.add('text-white');
 
-                // חישוב רווחים
                 const pData = petsData.find(p => p.id === state.active);
                 const gLvl = state.growth[state.active] || 0;
                 const petBonus = pData.power * (1 + gLvl);
@@ -251,6 +265,71 @@
             setTimeout(newProblem, 800);
         }
 
+        function triggerMegaMagicEvent() {
+            const body = document.body;
+            const flash = document.getElementById('flash-overlay');
+            const black = document.getElementById('black-screen');
+            body.classList.add('mega-shake-active');
+            let flashInterval = setInterval(() => { flash.style.display = flash.style.display === 'none' ? 'block' : 'none'; }, 50);
+
+            setTimeout(() => {
+                clearInterval(flashInterval);
+                flash.style.display = 'none';
+                black.style.display = 'block';
+                setTimeout(() => {
+                    black.style.display = 'none';
+                    state.isMagic = true;
+                    state.recipeStep = 0;
+                    enableMagicUI();
+                    save();
+                    render();
+                    setTimeout(() => { body.classList.remove('mega-shake-active'); newProblem(); }, 2000);
+                }, 2500);
+            }, 4000);
+        }
+
+        function showRecipePopup(text) {
+            const popup = document.getElementById('recipe-popup');
+            const msg = document.getElementById('recipe-msg');
+            const timer = document.getElementById('timer-sec');
+            msg.innerText = text;
+            popup.style.display = 'block';
+            
+            let sec = 60;
+            timer.innerText = sec;
+            if(recipeTimer) clearInterval(recipeTimer);
+            recipeTimer = setInterval(() => {
+                sec--;
+                timer.innerText = sec;
+                if(sec <= 0) closeRecipe();
+            }, 1000);
+        }
+
+        function closeRecipe() {
+            document.getElementById('recipe-popup').style.display = 'none';
+            if(recipeTimer) clearInterval(recipeTimer);
+        }
+
+        function buyPet(id, price) {
+            if (state.coins >= price) {
+                state.coins -= price;
+                state.owned.push(id);
+                const p = petsData.find(x => x.id === id);
+                if(p.msg) showRecipePopup(p.msg);
+                save(); render(); renderShop();
+            }
+        }
+
+        function selectPet(id) {
+            state.active = id;
+            if (state.streak >= 10) {
+                if (id === 'chick' && state.recipeStep === 1) state.recipeStep = 2;
+                else if (id === 'unicorn' && state.recipeStep === 2) state.recipeStep = 3;
+                else if (id !== 'chick' && id !== 'unicorn') state.recipeStep = 1;
+            } else { state.recipeStep = 0; }
+            save(); render(); renderShop();
+        }
+
         function spawnCoinFeedback(amount) {
             const fb = document.createElement('div');
             fb.className = 'coin-feedback';
@@ -261,41 +340,6 @@
             setTimeout(() => fb.remove(), 1000);
         }
 
-        function triggerMegaMagicEvent() {
-            const body = document.body;
-            const flash = document.getElementById('flash-overlay');
-            const black = document.getElementById('black-screen');
-            
-            // שלב 1: רעידות בטירוף ואורות
-            body.classList.add('mega-shake-active');
-            let flashInterval = setInterval(() => {
-                flash.style.display = flash.style.display === 'none' ? 'block' : 'none';
-            }, 50);
-
-            setTimeout(() => {
-                // שלב 2: מסך שחור
-                clearInterval(flashInterval);
-                flash.style.display = 'none';
-                black.style.display = 'block';
-
-                setTimeout(() => {
-                    // שלב 3: חזרה עם הקשת ורעידות
-                    black.style.display = 'none';
-                    state.isMagic = true;
-                    state.recipeStep = 0;
-                    enableMagicUI();
-                    save();
-                    render();
-                    
-                    // רעידות חזרה לעוד רגע
-                    setTimeout(() => {
-                        body.classList.remove('mega-shake-active');
-                        newProblem();
-                    }, 2000);
-                }, 2500);
-            }, 4000);
-        }
-
         function enableMagicUI() {
             document.body.classList.add('magic-mode-bg');
             document.getElementById('diamond-bar').classList.remove('hidden');
@@ -303,11 +347,7 @@
         }
 
         function buyDiamond() {
-            if (state.coins >= 10) {
-                state.coins -= 10;
-                state.diamonds++;
-                save(); render();
-            }
+            if (state.coins >= 10) { state.coins -= 10; state.diamonds++; save(); render(); }
         }
 
         function toggleShop() {
@@ -352,20 +392,6 @@
             });
         }
 
-        function buyPet(id, price) {
-            if (state.coins >= price) { state.coins -= price; state.owned.push(id); save(); render(); renderShop(); }
-        }
-
-        function selectPet(id) {
-            state.active = id;
-            if (state.streak >= 10) {
-                if (id === 'chick' && state.recipeStep === 1) state.recipeStep = 2;
-                else if (id === 'unicorn' && state.recipeStep === 2) state.recipeStep = 3;
-                else if (id !== 'chick' && id !== 'unicorn') state.recipeStep = 1;
-            } else { state.recipeStep = 0; }
-            save(); render(); renderShop();
-        }
-
         function feedPet(id) {
             const p = petsData.find(x => x.id === id);
             if (state.diamonds >= p.diamondCost) {
@@ -389,7 +415,7 @@
             emojiEl.style.transform = `scale(${scale})`;
         }
 
-        function save() { localStorage.setItem('math_quest_pro', JSON.stringify(state)); }
+        function save() { localStorage.setItem('math_quest_pro_v2', JSON.stringify(state)); }
 
         init();
     </script>
